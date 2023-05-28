@@ -58,7 +58,7 @@ def obtener_localizaciones(datos,dic):
   numurl=0
   for entrada in datos['contenido']:
     nlp = spacy.load('es_core_news_sm')
-    urls=urls+[datos.iloc[numurl]['enlace']]
+    urls=urls+[datos.iloc[numurl]['titulo']]
     numurl=numurl+1
     texto = BeautifulSoup(entrada).getText()
     doc = nlp(str(texto))
@@ -80,7 +80,7 @@ def obtener_localizaciones(datos,dic):
       if dic.get(palabra) is not None:
         if np.isnan(dic[palabra][0]):
           continue
-        st.write(palabra)
+        #st.write(palabra)
         #mc.add_child(Marker([dic[palabra][0], dic[palabra][1]]))
         coords=coords+[dic[palabra][0], dic[palabra][1]]
         #print(dic[palabra][0])
@@ -114,15 +114,15 @@ def mostrar_mapa(coords,urls):
 def display_time_filters():
     
     
-    dia = st.sidebar.selectbox('Día',['NoFilter']+ list(range(1, 31)),index=1)
-    mes = st.sidebar.selectbox('Mes', ['NoFilter']+ list(range(1,13)),  index=1)
+    dia = st.sidebar.selectbox('Día',['NoFilter']+ list(range(1, 31)),index=28)
+    mes = st.sidebar.selectbox('Mes', ['NoFilter']+ list(range(1,13)),  index=5)
     
-    año = st.sidebar.selectbox('Año', ['NoFilter']+ list(range(2000, 2024)),index=1)
+    año = st.sidebar.selectbox('Año', ['NoFilter']+ list(range(2000, 2024)),index=24)
     #st.header(f'Mapa delictivo {dia}/{mes}/{año}')
     return dia, mes,año
 
 def main():
-  st.title("Felony Map")
+  st.title("Security Incident Map")
   #lista_datos = obtener_noticias("https://elporvenir.mx/feedgooglenews/justicia")
   #lista_datos += obtener_noticias("https://web.archive.org/web/20230514221533/" +
                                   #"https://elporvenir.mx/feedgooglenews/justicia")
@@ -138,7 +138,7 @@ def main():
   datos["mes"] = pd.to_numeric(datos["mes"])
   col1, col2 = st.columns([16, 22])
   dia,mes,año=display_time_filters()
-  col1.header(str(dia)+"-" +str(mes)+"-"+str(año))
+  #col1.header(str(dia)+"-" +str(mes)+"-"+str(año))
   
   with st.form("my_form"):
     
@@ -153,7 +153,7 @@ def main():
 
 
 
-    st.dataframe(datos)
+    #st.dataframe(datos)
     dic=obtener_colonias()
     coords,urls=obtener_localizaciones(datos,dic)
     #st.write(coords)
