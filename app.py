@@ -106,39 +106,51 @@ def mostrar_mapa(coords):
 
 def display_time_filters():
     
-    lista_mes=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC']
-    dia = st.sidebar.selectbox('Día', list(range(1, 31)),index=26)
-    mes = st.sidebar.selectbox('Mes', lista_mes,  index=4)
     
-    año = st.sidebar.selectbox('Año', list(range(2000, 2024)),index=23)
+    dia = st.sidebar.selectbox('Día',['NoFilter']+ list(range(1, 31)),index=0)
+    mes = st.sidebar.selectbox('Mes', ['NoFilter']+ list(range(1,13)),  index=0)
+    
+    año = st.sidebar.selectbox('Año', ['NoFilter']+ list(range(2000, 2024)),index=0)
     #st.header(f'Mapa delictivo {dia}/{mes}/{año}')
     return dia, mes,año
 
 def main():
   st.title("Felony Map")
-  lista_datos = obtener_noticias("https://elporvenir.mx/feedgooglenews/justicia")
-  lista_datos += obtener_noticias("https://web.archive.org/web/20230514221533/" +
-                                  "https://elporvenir.mx/feedgooglenews/justicia")
-  lista_datos += obtener_noticias("https://web.archive.org/web/20230411062628/" +
-                                  "https://elporvenir.mx/feedgooglenews/justicia")
+  #lista_datos = obtener_noticias("https://elporvenir.mx/feedgooglenews/justicia")
+  #lista_datos += obtener_noticias("https://web.archive.org/web/20230514221533/" +
+                                  #"https://elporvenir.mx/feedgooglenews/justicia")
+  #lista_datos += obtener_noticias("https://web.archive.org/web/20230411062628/" +
+                                  #"https://elporvenir.mx/feedgooglenews/justicia")
+
+  lista_datos = pd.read_csv("datasets/datos.csv",encoding='utf-8') 
+  #st.dataframe(lista_datos)
+             
   datos = pd.DataFrame.from_records(lista_datos)
-  datos[['diasemana','dia','mes','ano','hora','hora2']] = datos['fechaPub'].str.split(', |\s',expand=True)
-  
+  datos=datos.loc[datos['clase']=="justicia"]     
+  datos[['dia','mes','ano']] = datos['fecha'].str.split('-',expand=True)
+  datos["mes"] = pd.to_numeric(datos["mes"])
   col1, col2 = st.columns([16, 22])
   dia,mes,año=display_time_filters()
-  col1.header(str(dia)+"/" +mes+"/"+str(año))
+  col1.header(str(dia)+"-" +str(mes)+"-"+str(año))
   
   with st.form("my_form"):
-  
-    datos=datos.loc[(datos['dia'] == str(dia)) &(datos['mes']==mes)&(datos['ano']==str(año)) ]
     
+    if dia!="NoFilter":
+      datos=datos.loc[(datos['dia'] == str(dia))]
+
+    if mes!="NoFilter":
+      datos=datos.loc[(datos['ano']==str(año))]
+
+    if año!="NoFilter":
+      datos=datos.loc[(datos['mes'] == mes)]
+
+
+
+    st.dataframe(datos)
     dic=obtener_colonias()
-    
     coords=obtener_localizaciones(datos,dic)
     #st.write(coords)
-  
     mostrar_mapa(coords)
-    
     submitted = st.form_submit_button("Volver a Cargar Mapa")
 
 if __name__ == "__main__":
