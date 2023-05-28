@@ -91,7 +91,7 @@ def obtener_localizaciones(datos,dic):
   return coords
 
 def mostrar_mapa(coords):
-  mapa = folium.Map(location=[25.6750,-100.31847], tiles='cartodbpositron',
+  mapa = folium.Map(location=[25.6750,-100.31847], tiles='Stamen Terrain',
                     zoom_start=13)
   
   mc = MarkerCluster()
@@ -101,17 +101,21 @@ def mostrar_mapa(coords):
     mc.add_child(Marker(i))
     mapa.add_child(mc)
   
-  st_data = st_folium(mapa, width=725)
+  st_data = st_folium(mapa,width=1000)
 
 
 def display_time_filters():
+    
     lista_mes=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC']
-    mes = st.sidebar.selectbox('Mes', lista_mes,  index=4)
     dia = st.sidebar.selectbox('Día', list(range(1, 31)),index=26)
-    st.header(f'Mapa delictivo {dia}/{mes}/2023')
-    return dia, mes
+    mes = st.sidebar.selectbox('Mes', lista_mes,  index=4)
+    
+    año = st.sidebar.selectbox('Año', list(range(2000, 2024)),index=23)
+    #st.header(f'Mapa delictivo {dia}/{mes}/{año}')
+    return dia, mes,año
 
 def main():
+  st.title("Felony Map")
   lista_datos = obtener_noticias("https://elporvenir.mx/feedgooglenews/justicia")
   lista_datos += obtener_noticias("https://web.archive.org/web/20230514221533/" +
                                   "https://elporvenir.mx/feedgooglenews/justicia")
@@ -120,18 +124,22 @@ def main():
   datos = pd.DataFrame.from_records(lista_datos)
   datos[['diasemana','dia','mes','ano','hora','hora2']] = datos['fechaPub'].str.split(', |\s',expand=True)
   
+  col1, col2 = st.columns([16, 22])
+  dia,mes,año=display_time_filters()
+  col1.header(str(dia)+"/" +mes+"/"+str(año))
+  
   with st.form("my_form"):
-    dia,mes=display_time_filters()
   
-  
-    datos=datos.loc[(datos['dia'] == str(dia)) &(datos['mes']==mes) ]
+    datos=datos.loc[(datos['dia'] == str(dia)) &(datos['mes']==mes)&(datos['ano']==str(año)) ]
     
     dic=obtener_colonias()
     
     coords=obtener_localizaciones(datos,dic)
     #st.write(coords)
+  
     mostrar_mapa(coords)
-    submitted = st.form_submit_button("Cargar Mapa")
+    
+    submitted = st.form_submit_button("Volver a Cargar Mapa")
 
 if __name__ == "__main__":
     main()
