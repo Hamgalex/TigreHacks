@@ -52,10 +52,14 @@ def obtener_colonias():
 def obtener_localizaciones(datos,dic):
   
   coords=[]
+  urls=[]
   #print("XD")
   #print(datos)
+  numurl=0
   for entrada in datos['contenido']:
     nlp = spacy.load('es_core_news_sm')
+    urls=urls+[datos.iloc[numurl]['enlace']]
+    numurl=numurl+1
     texto = BeautifulSoup(entrada).getText()
     doc = nlp(str(texto))
     ents = [i for i in doc.ents if i.label_ == 'LOC']
@@ -76,7 +80,7 @@ def obtener_localizaciones(datos,dic):
       if dic.get(palabra) is not None:
         if np.isnan(dic[palabra][0]):
           continue
-        
+        st.write(palabra)
         #mc.add_child(Marker([dic[palabra][0], dic[palabra][1]]))
         coords=coords+[dic[palabra][0], dic[palabra][1]]
         #print(dic[palabra][0])
@@ -88,17 +92,20 @@ def obtener_localizaciones(datos,dic):
 
       if bandera==True:
         break
-  return coords
+  return coords,urls
 
-def mostrar_mapa(coords):
+def mostrar_mapa(coords,urls):
   mapa = folium.Map(location=[25.6750,-100.31847], tiles='Stamen Terrain',
                     zoom_start=13)
   
+  #st.write(urls)
+  numurl=0
   mc = MarkerCluster()
   coords=np.asarray(coords)
   coords = coords.reshape(-1, 2)
   for i in coords:
-    mc.add_child(Marker(i))
+    mc.add_child(Marker(i,popup=urls[numurl]))
+    numurl=numurl+1
     mapa.add_child(mc)
   
   st_data = st_folium(mapa,width=1000)
@@ -107,10 +114,10 @@ def mostrar_mapa(coords):
 def display_time_filters():
     
     
-    dia = st.sidebar.selectbox('Día',['NoFilter']+ list(range(1, 31)),index=0)
-    mes = st.sidebar.selectbox('Mes', ['NoFilter']+ list(range(1,13)),  index=0)
+    dia = st.sidebar.selectbox('Día',['NoFilter']+ list(range(1, 31)),index=1)
+    mes = st.sidebar.selectbox('Mes', ['NoFilter']+ list(range(1,13)),  index=1)
     
-    año = st.sidebar.selectbox('Año', ['NoFilter']+ list(range(2000, 2024)),index=0)
+    año = st.sidebar.selectbox('Año', ['NoFilter']+ list(range(2000, 2024)),index=1)
     #st.header(f'Mapa delictivo {dia}/{mes}/{año}')
     return dia, mes,año
 
@@ -148,9 +155,9 @@ def main():
 
     st.dataframe(datos)
     dic=obtener_colonias()
-    coords=obtener_localizaciones(datos,dic)
+    coords,urls=obtener_localizaciones(datos,dic)
     #st.write(coords)
-    mostrar_mapa(coords)
+    mostrar_mapa(coords,urls)
     submitted = st.form_submit_button("Volver a Cargar Mapa")
 
 if __name__ == "__main__":
